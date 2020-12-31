@@ -630,7 +630,8 @@ gpio!([
         feature = "stm32f072",
         feature = "stm32f078",
         feature = "stm32f091",
-        feature = "stm32f098"
+        feature = "stm32f098",
+	feature = "gd32e230",
     ) => [
         PC0: (pc0, 0, Input<Floating>),
         PC1: (pc1, 1, Input<Floating>),
@@ -653,7 +654,8 @@ gpio!([
         feature = "stm32f030",
         feature = "stm32f051",
         feature = "stm32f058",
-        feature = "stm32f070"
+        feature = "stm32f070",
+	feature = "gd32e230",
     ) => [
         PD2: (pd2, 2, Input<Floating>),
     ],
@@ -711,6 +713,7 @@ gpio!([
         feature = "stm32f030x8",
         feature = "stm32f051",
         feature = "stm32f058",
+	feature = "gd32e230",
     ) => [
         PF0: (pf0, 0, Input<Floating>),
         PF1: (pf1, 1, Input<Floating>),

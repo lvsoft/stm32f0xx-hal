@@ -33,11 +33,14 @@ targets = ["thumbv6m-none-eabi"]
 bare-metal = { version = "1.0.0" }
 cast = { version = "0.2", default-features = false }
 cortex-m = "0.6"
-embedded-hal = { version = "0.2", features = ["unproven"] }
 stm32f0 = "0.12.1"
+embedded-hal = { version = "0.2", features = ["unproven"] }
 nb = "1.0"
 void = { version = "1.0", default-features = false }
 stm32-usbd = { version = "0.5.1", features = ["ram_access_2x16"], optional = true }
+
+[dependencies.gd32e2]
+path = "../stm32-rs/gd32e2"
 
 [dev-dependencies]
 cortex-m-rt = "0.6"
@@ -67,6 +70,7 @@ stm32f072 = ["stm32f0/stm32f0x2", "device-selected"]
 stm32f078 = ["stm32f0/stm32f0x8", "device-selected"]
 stm32f091 = ["stm32f0/stm32f0x1", "device-selected"]
 stm32f098 = ["stm32f0/stm32f0x8", "device-selected"]
+gd32e230 = ["gd32e2/gd32e23x", "device-selected"]
 
 [profile.dev]
 debug = true

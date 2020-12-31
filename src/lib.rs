@@ -14,6 +14,11 @@ pub use stm32f0::stm32f0x0 as pac;
 ))]
 pub use stm32f0::stm32f0x1 as pac;
 
+#[cfg(any(
+    feature = "gd32e230",
+))]
+pub use gd32e2::gd32e23x as pac;
+
 #[cfg(any(feature = "stm32f042", feature = "stm32f072"))]
 pub use stm32f0::stm32f0x2 as pac;
 
@@ -26,6 +31,8 @@ pub use stm32f0::stm32f0x2 as pac;
 ))]
 pub use stm32f0::stm32f0x8 as pac;
 
+
+
 #[cfg(feature = "device-selected")]
 pub mod adc;
 #[cfg(any(
@@ -35,6 +42,7 @@ pub mod adc;
     feature = "stm32f078",
     feature = "stm32f091",
     feature = "stm32f098",
+    feature = "gd32e23x",
 ))]
 pub mod dac;
 #[cfg(feature = "device-selected")]
@@ -67,6 +75,7 @@ pub mod timers;
     feature = "stm32f058",
     feature = "stm32f078",
     feature = "stm32f098",
+    feature = "gd32e23x",
 ))]
 pub mod tsc;
 #[cfg(all(

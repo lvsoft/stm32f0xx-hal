@@ -221,6 +221,7 @@ adc_pins!(
     feature = "stm32f078",
     feature = "stm32f091",
     feature = "stm32f098",
+    feature = "gd32e230",
 ))]
 adc_pins!(
     gpioc::PC0<Analog> => 10_u8,
@@ -374,6 +375,7 @@ impl VRef {
     feature = "stm32f078",
     feature = "stm32f091",
     feature = "stm32f098",
+    feature = "gd32e230",
 ))]
 #[derive(Debug, Default)]
 /// Battery reference voltage (ADC Channel 18)
@@ -391,6 +393,7 @@ pub struct VBat;
     feature = "stm32f078",
     feature = "stm32f091",
     feature = "stm32f098",
+    feature = "gd32e230",
 ))]
 adc_pins!(
     VBat  => 18_u8,
@@ -408,6 +411,7 @@ adc_pins!(
     feature = "stm32f078",
     feature = "stm32f091",
     feature = "stm32f098",
+    feature = "gd32e230",
 ))]
 impl VBat {
     /// Init a new VBat
@@ -565,6 +569,19 @@ impl Adc {
         while rcc.regs.cr2.read().hsi14rdy().is_not_ready() {}
     }
 
+    #[cfg(any(
+    feature = "stm32f031",
+    feature = "stm32f038",
+    feature = "stm32f042",
+    feature = "stm32f048",
+    feature = "stm32f051",
+    feature = "stm32f058",
+    feature = "stm32f071",
+    feature = "stm32f072",
+    feature = "stm32f078",
+    feature = "stm32f091",
+    feature = "stm32f098",
+    ))]
     fn power_up(&mut self) {
         if self.rb.isr.read().adrdy().is_ready() {
             self.rb.isr.modify(|_, w| w.adrdy().clear());
@@ -573,13 +590,47 @@ impl Adc {
         while self.rb.isr.read().adrdy().is_not_ready() {}
     }
 
+    #[cfg(any(
+    feature = "stm32f031",
+    feature = "stm32f038",
+    feature = "stm32f042",
+    feature = "stm32f048",
+    feature = "stm32f051",
+    feature = "stm32f058",
+    feature = "stm32f071",
+    feature = "stm32f072",
+    feature = "stm32f078",
+    feature = "stm32f091",
+    feature = "stm32f098",
+    ))]
     fn power_down(&mut self) {
         self.rb.cr.modify(|_, w| w.adstp().stop_conversion());
         while self.rb.cr.read().adstp().is_stopping() {}
         self.rb.cr.modify(|_, w| w.addis().disable());
         while self.rb.cr.read().aden().is_enabled() {}
     }
+    
+    #[cfg(any(
+    feature = "gd32e230",
+    ))]
+    fn power_up(&mut self) {
+        // if self.rb.isr.read().adrdy().is_ready() {
+        //     self.rb.isr.modify(|_, w| w.adrdy().clear());
+        // }
+        self.rb.cr.modify(|_, w| w.aden().enabled());
+        //while self.rb.isr.read().adrdy().is_not_ready() {}
+    }
 
+    #[cfg(any(
+    feature = "gd32e230",
+    ))]
+    fn power_down(&mut self) {
+        self.rb.cr.modify(|_, w| w.adstp().stop_conversion());
+        while self.rb.cr.read().adstp().is_stopping() {}
+        self.rb.cr.modify(|_, w| w.addis().disable());
+        while self.rb.cr.read().aden().is_enabled() {}
+    }
+    
     fn convert(&mut self, chan: u8) -> u16 {
         self.rb.chselr.write(|w| unsafe { w.bits(1_u32 << chan) });
 

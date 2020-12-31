@@ -170,6 +170,7 @@ mod inner {
     feature = "stm32f078",
     feature = "stm32f091",
     feature = "stm32f098",
+    feature = "gd32e230",
 ))]
 mod inner {
     use crate::pac::{rcc::cfgr::SW_A, RCC};
@@ -201,7 +202,8 @@ mod inner {
         feature = "stm32f031",
         feature = "stm32f038",
         feature = "stm32f051",
-        feature = "stm32f058"
+        feature = "stm32f058",
+	feature = "gd32e230",
     ))]
     pub(super) const RCC_PLLSRC_PREDIV1_SUPPORT: bool = false;
 

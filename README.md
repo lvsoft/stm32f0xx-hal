@@ -30,6 +30,8 @@ Supported Configurations
 * __stm32f078__  
 * __stm32f091__  
 * __stm32f098__  
+* __gd32e23x__  
+
 
 
 Getting Started
