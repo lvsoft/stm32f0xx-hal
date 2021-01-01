@@ -255,19 +255,64 @@ impl VTemp {
     /// t<sub>START</sub> which can be found in your micro's datasheet, you
     /// must wait at least that long after enabling before taking a reading.
     /// Remember to disable when not in use.
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn enable(&mut self, adc: &mut Adc) {
         adc.rb.ccr.modify(|_, w| w.tsen().set_bit());
     }
 
+    #[cfg(any(
+	feature = "gd32e23x",
+    ))]
+    pub fn enable(&mut self, adc: &mut Adc) {
+	
+    }
+		  
     /// Disable the internal temperature sense.
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn disable(&mut self, adc: &mut Adc) {
         adc.rb.ccr.modify(|_, w| w.tsen().clear_bit());
+    }
+    
+    #[cfg(any(
+	feature = "gd32e23x",
+    ))]
+    pub fn disable(&mut self, adc: &mut Adc) {
+	
     }
 
     /// Checks if the temperature sensor is enabled, does not account for the
     /// t<sub>START</sub> time however.
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn is_enabled(&self, adc: &Adc) -> bool {
         adc.rb.ccr.read().tsen().bit_is_set()
+    }
+
+    #[cfg(any(
+	feature = "gd32e23x",
+    ))]
+    pub fn is_enabled(&self, adc: &Adc) -> bool {
+        
     }
 
     fn convert_temp(vtemp: u16, vdda: u16) -> i16 {
