@@ -49,17 +49,42 @@ use embedded_hal::{
     blocking::delay::DelayUs,
 };
 
+
 use crate::{
     delay::Delay,
     gpio::*,
-    pac::{
-        adc::{
-            cfgr1::{ALIGN_A, RES_A},
-            smpr::SMP_A,
-        },
-        ADC,
-    },
     rcc::Rcc,
+};
+
+#[cfg(any(
+    feature = "stm32f030",
+    feature = "stm32f051",
+    feature = "stm32f058",
+    feature = "stm32f070",
+    feature = "stm32f071",
+    feature = "stm32f072",
+    feature = "stm32f078",
+    feature = "stm32f091",
+    feature = "stm32f098",
+))]
+use crate::pac::{
+    adc::{
+        cfgr1::{ALIGN_A, RES_A},
+        smpr::SMP_A,
+    },
+    ADC,
+};
+
+#[cfg(any(
+    feature = "gd32e230",
+))]
+use crate::pac::{
+    adc::{
+	adc_ctl1::DAL_A as ALIGN_A,
+	adc_ctl0::DRES_A as RES_A,
+	adc_sampt1::SPT9_A as SMP_A,
+    },
+    ADC,
 };
 
 /// Analog to Digital converter interface
@@ -268,7 +293,7 @@ impl VTemp {
     }
 
     #[cfg(any(
-	feature = "gd32e23x",
+	feature = "gd32e230",
     ))]
     pub fn enable(&mut self, adc: &mut Adc) {
 	
@@ -288,7 +313,7 @@ impl VTemp {
     }
     
     #[cfg(any(
-	feature = "gd32e23x",
+	feature = "gd32e230",
     ))]
     pub fn disable(&mut self, adc: &mut Adc) {
 	
@@ -309,7 +334,7 @@ impl VTemp {
     }
 
     #[cfg(any(
-	feature = "gd32e23x",
+	feature = "gd32e230",
     ))]
     pub fn is_enabled(&self, adc: &Adc) -> bool {
         
@@ -370,18 +395,63 @@ impl VRef {
     }
 
     /// Enable the internal voltage reference, remember to disable when not in use.
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn enable(&mut self, adc: &mut Adc) {
         adc.rb.ccr.modify(|_, w| w.vrefen().set_bit());
     }
 
+    #[cfg(any(
+	feature = "gd32e230",
+    ))]
+    pub fn enable(&mut self, adc: &mut Adc) {
+	
+    }
+
     /// Disable the internal reference voltage.
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn disable(&mut self, adc: &mut Adc) {
         adc.rb.ccr.modify(|_, w| w.vrefen().clear_bit());
     }
 
+    #[cfg(any(
+	feature = "gd32e230",
+    ))]
+    pub fn disable(&mut self, adc: &mut Adc) {
+	
+    }
+
     /// Returns if the internal voltage reference is enabled.
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn is_enabled(&self, adc: &Adc) -> bool {
         adc.rb.ccr.read().vrefen().bit_is_set()
+    }
+
+    #[cfg(any(
+	feature = "gd32e230",
+    ))]
+    pub fn is_enabled(&self, adc: &Adc) -> bool {
+        
     }
 
     /// Reads the value of VDDA in milli-volts
@@ -466,19 +536,66 @@ impl VBat {
 
     /// Enable the internal VBat sense, remember to disable when not in use
     /// as otherwise it will sap current from the VBat source.
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn enable(&mut self, adc: &mut Adc) {
         adc.rb.ccr.modify(|_, w| w.vbaten().set_bit());
     }
 
+    #[cfg(any(
+	feature = "gd32e230",
+    ))]
+    pub fn enable(&mut self, adc: &mut Adc) {
+	
+    }
+
     /// Disable the internal VBat sense.
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn disable(&mut self, adc: &mut Adc) {
         adc.rb.ccr.modify(|_, w| w.vbaten().clear_bit());
     }
 
+    #[cfg(any(
+	feature = "gd32e230",
+    ))]
+    pub fn disable(&mut self, adc: &mut Adc) {
+	
+    }
+    
+    
     /// Returns if the internal VBat sense is enabled
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     pub fn is_enabled(&self, adc: &Adc) -> bool {
         adc.rb.ccr.read().vbaten().bit_is_set()
     }
+    
+    #[cfg(any(
+	feature = "gd32e230",
+    ))]
+    pub fn is_enabled(&self, adc: &Adc) -> bool {
+        
+    }
+
 
     /// Reads the value of VBat in milli-volts
     pub fn read(adc: &mut Adc) -> u16 {
@@ -590,6 +707,15 @@ impl Adc {
         (v * vdda / max_samp) as u16
     }
 
+
+    #[cfg(any(
+	feature = "stm32f051",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     fn calibrate(&mut self) {
         /* Ensure that ADEN = 0 */
         if self.rb.cr.read().aden().is_enabled() {
@@ -608,6 +734,13 @@ impl Adc {
         while self.rb.cr.read().adcal().is_calibrating() {}
     }
 
+    #[cfg(any(
+	feature = "gd32e230",
+    ))]
+    fn calibrate(&mut self) {
+	
+    }
+    
     fn select_clock(&mut self, rcc: &mut Rcc) {
         rcc.regs.apb2enr.modify(|_, w| w.adcen().enabled());
         rcc.regs.cr2.modify(|_, w| w.hsi14on().on());
@@ -636,17 +769,17 @@ impl Adc {
     }
 
     #[cfg(any(
-    feature = "stm32f031",
-    feature = "stm32f038",
-    feature = "stm32f042",
-    feature = "stm32f048",
-    feature = "stm32f051",
-    feature = "stm32f058",
-    feature = "stm32f071",
-    feature = "stm32f072",
-    feature = "stm32f078",
-    feature = "stm32f091",
-    feature = "stm32f098",
+	feature = "stm32f031",
+	feature = "stm32f038",
+	feature = "stm32f042",
+	feature = "stm32f048",
+	feature = "stm32f051",
+	feature = "stm32f058",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
     ))]
     fn power_down(&mut self) {
         self.rb.cr.modify(|_, w| w.adstp().stop_conversion());
@@ -656,26 +789,39 @@ impl Adc {
     }
     
     #[cfg(any(
-    feature = "gd32e230",
+	feature = "gd32e230",
     ))]
     fn power_up(&mut self) {
         // if self.rb.isr.read().adrdy().is_ready() {
         //     self.rb.isr.modify(|_, w| w.adrdy().clear());
         // }
-        self.rb.cr.modify(|_, w| w.aden().enabled());
+        //self.rb.cr.modify(|_, w| w.aden().enabled());
         //while self.rb.isr.read().adrdy().is_not_ready() {}
     }
 
     #[cfg(any(
-    feature = "gd32e230",
+	feature = "gd32e230",
     ))]
     fn power_down(&mut self) {
-        self.rb.cr.modify(|_, w| w.adstp().stop_conversion());
-        while self.rb.cr.read().adstp().is_stopping() {}
-        self.rb.cr.modify(|_, w| w.addis().disable());
-        while self.rb.cr.read().aden().is_enabled() {}
+        // self.rb.cr.modify(|_, w| w.adstp().stop_conversion());
+        // while self.rb.cr.read().adstp().is_stopping() {}
+        // self.rb.cr.modify(|_, w| w.addis().disable());
+        // while self.rb.cr.read().aden().is_enabled() {}
     }
-    
+
+    #[cfg(any(
+	feature = "stm32f031",
+	feature = "stm32f038",
+	feature = "stm32f042",
+	feature = "stm32f048",
+	feature = "stm32f051",
+	feature = "stm32f058",
+	feature = "stm32f071",
+	feature = "stm32f072",
+	feature = "stm32f078",
+	feature = "stm32f091",
+	feature = "stm32f098",
+    ))]
     fn convert(&mut self, chan: u8) -> u16 {
         self.rb.chselr.write(|w| unsafe { w.bits(1_u32 << chan) });
 
@@ -698,6 +844,13 @@ impl Adc {
         } else {
             res
         }
+    }
+    
+    #[cfg(any(
+	feature = "gd32e230",
+    ))]
+    fn convert(&mut self, chan: u8) -> u16 {
+	
     }
 }
 
