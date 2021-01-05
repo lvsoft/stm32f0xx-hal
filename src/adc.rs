@@ -296,7 +296,7 @@ impl VTemp {
 	feature = "gd32e230",
     ))]
     pub fn enable(&mut self, adc: &mut Adc) {
-	
+	adc.rb.adc_ctl1.modify(|_, w| w.tsvren().set_bit());
     }
 		  
     /// Disable the internal temperature sense.
@@ -316,7 +316,7 @@ impl VTemp {
 	feature = "gd32e230",
     ))]
     pub fn disable(&mut self, adc: &mut Adc) {
-	
+	adc.rb.adc_ctl1.modify(|_, w| w.tsvren().clear_bit());
     }
 
     /// Checks if the temperature sensor is enabled, does not account for the
@@ -337,7 +337,7 @@ impl VTemp {
 	feature = "gd32e230",
     ))]
     pub fn is_enabled(&self, adc: &Adc) -> bool {
-        
+        adc.rb.adc_ctl1.read().tsvren().bit_is_set()
     }
 
     fn convert_temp(vtemp: u16, vdda: u16) -> i16 {
@@ -411,7 +411,7 @@ impl VRef {
 	feature = "gd32e230",
     ))]
     pub fn enable(&mut self, adc: &mut Adc) {
-	
+	adc.rb.adc_ctl1.modify(|_, w| w.tsvren().set_bit());
     }
 
     /// Disable the internal reference voltage.
@@ -431,7 +431,7 @@ impl VRef {
 	feature = "gd32e230",
     ))]
     pub fn disable(&mut self, adc: &mut Adc) {
-	
+	adc.rb.adc_ctl1.modify(|_, w| w.tsvren().clear_bit());
     }
 
     /// Returns if the internal voltage reference is enabled.
@@ -451,7 +451,7 @@ impl VRef {
 	feature = "gd32e230",
     ))]
     pub fn is_enabled(&self, adc: &Adc) -> bool {
-        
+        adc.rb.adc_ctl1.read().tsvren().bit_is_set()
     }
 
     /// Reads the value of VDDA in milli-volts
@@ -526,7 +526,6 @@ adc_pins!(
     feature = "stm32f078",
     feature = "stm32f091",
     feature = "stm32f098",
-    feature = "gd32e230",
 ))]
 impl VBat {
     /// Init a new VBat
@@ -536,23 +535,8 @@ impl VBat {
 
     /// Enable the internal VBat sense, remember to disable when not in use
     /// as otherwise it will sap current from the VBat source.
-    #[cfg(any(
-	feature = "stm32f051",
-	feature = "stm32f071",
-	feature = "stm32f072",
-	feature = "stm32f078",
-	feature = "stm32f091",
-	feature = "stm32f098",
-    ))]
     pub fn enable(&mut self, adc: &mut Adc) {
         adc.rb.ccr.modify(|_, w| w.vbaten().set_bit());
-    }
-
-    #[cfg(any(
-	feature = "gd32e230",
-    ))]
-    pub fn enable(&mut self, adc: &mut Adc) {
-	
     }
 
     /// Disable the internal VBat sense.
@@ -568,35 +552,11 @@ impl VBat {
         adc.rb.ccr.modify(|_, w| w.vbaten().clear_bit());
     }
 
-    #[cfg(any(
-	feature = "gd32e230",
-    ))]
-    pub fn disable(&mut self, adc: &mut Adc) {
-	
-    }
-    
-    
     /// Returns if the internal VBat sense is enabled
-    #[cfg(any(
-	feature = "stm32f051",
-	feature = "stm32f071",
-	feature = "stm32f072",
-	feature = "stm32f078",
-	feature = "stm32f091",
-	feature = "stm32f098",
-    ))]
     pub fn is_enabled(&self, adc: &Adc) -> bool {
         adc.rb.ccr.read().vbaten().bit_is_set()
     }
     
-    #[cfg(any(
-	feature = "gd32e230",
-    ))]
-    pub fn is_enabled(&self, adc: &Adc) -> bool {
-        
-    }
-
-
     /// Reads the value of VBat in milli-volts
     pub fn read(adc: &mut Adc) -> u16 {
         let mut vbat = Self::new();
@@ -795,7 +755,7 @@ impl Adc {
         // if self.rb.isr.read().adrdy().is_ready() {
         //     self.rb.isr.modify(|_, w| w.adrdy().clear());
         // }
-        //self.rb.cr.modify(|_, w| w.aden().enabled());
+        self.rb.cr.modify(|_, w| w.aden().enabled());
         //while self.rb.isr.read().adrdy().is_not_ready() {}
     }
 
@@ -805,7 +765,7 @@ impl Adc {
     fn power_down(&mut self) {
         // self.rb.cr.modify(|_, w| w.adstp().stop_conversion());
         // while self.rb.cr.read().adstp().is_stopping() {}
-        // self.rb.cr.modify(|_, w| w.addis().disable());
+         self.rb.cr.modify(|_, w| w.addis().disable());
         // while self.rb.cr.read().aden().is_enabled() {}
     }
 
