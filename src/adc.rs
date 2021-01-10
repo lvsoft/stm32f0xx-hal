@@ -698,7 +698,21 @@ impl Adc {
 	feature = "gd32e230",
     ))]
     fn calibrate(&mut self) {
+	/* reset the selected ADC calibration register */
+	self.rb.adc_ctl1.modify(|_, w| w.rstclb().enable());
+	// ADC_CTL1 |= (uint32_t) ADC_CTL1_RSTCLB;
 	
+	/* check the RSTCLB bit state */
+	//while((ADC_CTL1 & ADC_CTL1_RSTCLB)){}
+	while self.rb.adc_ctl1.read().rstclb().is_enabled() {}
+
+	/* enable ADC calibration process */
+	//ADC_CTL1 |= ADC_CTL1_CLB;
+	self.rb.adc_ctl1.modify(|_, w| w.clb().enable());
+	
+	/* check the CLB bit state */
+	//while((ADC_CTL1 & ADC_CTL1_CLB)){}
+	while self.rb.adc_ctl1.read().clb().is_enabled() {}
     }
     
     fn select_clock(&mut self, rcc: &mut Rcc) {
@@ -755,8 +769,15 @@ impl Adc {
         // if self.rb.isr.read().adrdy().is_ready() {
         //     self.rb.isr.modify(|_, w| w.adrdy().clear());
         // }
-        self.rb.cr.modify(|_, w| w.aden().enabled());
-        //while self.rb.isr.read().adrdy().is_not_ready() {}
+        // self.rb.cr.modify(|_, w| w.aden().enabled());
+        // while self.rb.isr.read().adrdy().is_not_ready() {}
+
+	// if(RESET == (ADC_CTL1 & ADC_CTL1_ADCON)){
+        //     ADC_CTL1 |= (uint32_t)ADC_CTL1_ADCON;
+	// }
+	if self.rb.adc_ctl1.read().adcon().is_disabled(){
+	    self.rb.adc_ctl1.modify(|_, w| w.adcon().set());
+	}
     }
 
     #[cfg(any(
@@ -765,8 +786,11 @@ impl Adc {
     fn power_down(&mut self) {
         // self.rb.cr.modify(|_, w| w.adstp().stop_conversion());
         // while self.rb.cr.read().adstp().is_stopping() {}
-         self.rb.cr.modify(|_, w| w.addis().disable());
+        // self.rb.cr.modify(|_, w| w.addis().disable());
         // while self.rb.cr.read().aden().is_enabled() {}
+
+	// ADC_CTL1 &= ~((uint32_t)ADC_CTL1_ADCON);
+	self.rb.adc_ctl1.modify(|_, w| w.adcon().clear());
     }
 
     #[cfg(any(
@@ -810,7 +834,53 @@ impl Adc {
 	feature = "gd32e230",
     ))]
     fn convert(&mut self, chan: u8) -> u16 {
+	// adc_special_function_config enable
+	self.rb.adc_ctl0.modify(|_, w| {
+	    w.sm.scan_mode().set();       // ADC_CTL0 |= ADC_SCAN_MODE;
+	    w.ica.inserted_channel_auto.set();  // ADC_CTL0 |= ADC_INSERTED_CHANNEL_AUTO;
+	});
 	
+	self.rb.adc_ctl1.modify(|_, w| {
+	    w.continuous_mode().set();   // ADC_CTL1 |= ADC_CONTINUOUS_MODE;
+
+	    //adc_external_trigger_source_config(ADC_REGULAR_CHANNEL, ADC_EXTTRIG_REGULAR_NONE)
+	    w.eterc.set();  // ADC_CTL1 |= ADC_CTL1_ETERC;
+	    
+	    //adc_data_alignment_config(ADC_DATAALIGN_RIGHT);
+	    w.dal.unset();   // ADC_CTL1 &= ~ADC_CTL1_DAL;
+	});
+
+	//adc_channel_length_config(ADC_REGULAR_CHANNEL, 1U);
+	self.rb.adc_rsq0.modify(|_, w| {
+	    w.rl.unset();  //ADC_RSQ0 &= ~((uint32_t)ADC_RSQ0_RL);
+	});
+	
+        self.rb.adc_rsq0.variant(1_u32 - 1_u32);  //ADC_RSQ0 |= RSQ0_RL((uint32_t)(length-1U));
+
+	
+	//adc_regular_channel_config(0U, BOARD_ADC_CHANNEL, ADC_SAMPLETIME_55POINT5);
+	self.rb.adc_rsq2.variant(chan);
+	self.rb.adc_sampt1.variant(self.sample_time.into());
+	//adc_external_trigger_config(ADC_REGULAR_CHANNEL, ENABLE);
+	self.rb.adc_ctl1.modify(|_, w| w.eterc().set());
+
+	//adc_resolution_config(ADC_RESOLUTION_12B);
+	self.rb.adc_ctl0.dres().variant(self.precision.into());
+	//adc_enable();
+	self.rb.adc_ctl1.adcon.modify(|_, w| w.adcon().set());
+	//adc_calibration_enable();
+	self.calibrate();
+
+	//adc_flag_clear(ADC_FLAG_EOC);
+	//while(SET != adc_flag_get(ADC_FLAG_EOC)){}
+	while self.rb.adc_stat.read().eoc().NoEvent(){}
+	//adc_value = ADC_RDATA;
+	let res = self.rb.adc_rdata.read().bits() as u16;
+	if self.align == AdcAlign::Left && self.precision == AdcPrecision::B_6{
+	    res << 8
+	} else {
+	    res
+	}
     }
 }
 
